@@ -1,4 +1,6 @@
 const fs = require('fs');
+const cssLoader = require('./loaders/css');
+const styleLoader = require('./loaders/style');
 
 function createBaseTemplate(entry) {
   return `(function (modules) {
@@ -35,20 +37,53 @@ function finalizeTemplate(entry, fileList) {
 }
 
 function createModuleAssets(fileList) {
-  const modules = fileList.reduce((template, fileInfo) => {
-    const fileContent = fs.readFileSync(fileInfo.absPath, 'utf8').replace(/\n/g, '\\n');
-    
-    const moduleAsset = `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'${fileInfo.name}': (function(module, exports, __slimpack_require__) {
-        eval("${fileContent.replace(/require/, '__slimpack_require__')}");
-      }),
-    `;
-    
-    return `${template}\n${moduleAsset}`;
-  }, '');
+  const modules = processLoaders(fileList)
+    .reduce((template, { name, content }) => {
+      const fileContent = content.replace(/\n/g, '\\n');
+
+      const moduleAsset = `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'${name}': (function(module, exports, __slimpack_require__) {
+          eval("${fileContent.replace(/require/g, '__slimpack_require__')}");
+        }),
+      `;
+      
+      return `${template}\n${moduleAsset}`;
+    }, '');
   
   return `({
     ${modules}
   })`;
+}
+
+function processLoaders(fileList) {
+  const jsFiles = fileList.filter(({ loaders }) => loaders.length === 0);
+  const loaderFiles = fileList
+    .filter(({ loaders }) => loaders.length > 0)
+    .reduce((files, file) => {
+      let result = [];
+    
+      for (let i = file.loaders.length - 1; i >= 0; i--) {
+        let loader = determineLoaderModule(file.loaders[i]);
+        result = [...loader(file, flatten(result))];
+      }
+
+      return [...files, ...flatten(result)];
+    }, []);
+    
+  return [...jsFiles, ...loaderFiles];
+}
+
+function determineLoaderModule({ loader }) {
+  switch (loader) {
+    case 'css-loader':
+      return cssLoader;
+    case 'style-loader':
+    default:
+      return styleLoader;
+  }
+}
+
+function flatten(list) {
+  return [].concat.apply([], list);
 }
 
 module.exports = finalizeTemplate;
