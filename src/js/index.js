@@ -1,5 +1,4 @@
 const avengers = require('./avengers.js');
-const styles = require('../styles/styles.css');
 
 window.onload = Object.keys(avengers)
   .forEach((avengerName) => {
