@@ -1,3 +1,3 @@
-const slimpack = require('./lib/slimpack');
+const config = require('../slimpack.config');
 
-module.exports = slimpack;
+module.exports = require('./lib/slimpack')(config);
