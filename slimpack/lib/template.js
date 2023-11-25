@@ -36,14 +36,18 @@ function createBaseTemplate(entry) {
  * @param  {BundleModule[]} moduleList - The list of file modules created by the cmopiler & parser
  * @return {string} The finalized bundle string
  */
-function finalizeTemplate(entry, moduleList) {
+function finalizeTemplate(compiler, entry, moduleList) {
+  compiler.events.emit('pre-bundle');
   const baseTemplate = createBaseTemplate(entry);
   const moduleAssets = createModuleAssets(moduleList);
 
-  return `
+  const template = `
     ${baseTemplate}
     ${moduleAssets}
   `;
+
+  compiler.events.emit('post-bundle');
+  return template;
 }
 
 /**

@@ -8,6 +8,8 @@
         "comma-dangle": ["error", "never"],
         "no-use-before-define": "off",
         "arrow-body-style": "off",
-        "arrow-parens": ["error", "always"]
+        "arrow-parens": ["error", "always"],
+        "class-methods-use-this": "off",
+        "object-curly-newline": "off"
     }
 }

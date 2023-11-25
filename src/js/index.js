@@ -1,5 +1,5 @@
 const avengers = require('./avengers.js');
-const style = require('../styles/styles.css'); // eslint-disable-line no-unused-vars
+const styles = require('../styles/styles.css');
 
 window.onload = Object.keys(avengers)
   .forEach((avengerName) => {

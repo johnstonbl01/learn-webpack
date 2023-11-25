@@ -1,4 +1,5 @@
 const path = require('path');
+const BundleTimePlugin = require('./slimpack/lib/plugins/BundleTimePlugin.js');
 
 module.exports = {
   entry: path.resolve(__dirname, './src/js/index.js'),
@@ -13,5 +14,8 @@ module.exports = {
         use: [{ loader: 'style-loader' }, { loader: 'css-loader' }]
       }
     ]
-  }
-}
+  },
+  plugins: [
+    new BundleTimePlugin()
+  ]
+};

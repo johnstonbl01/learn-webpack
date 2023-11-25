@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const EventEmitter = require('events');
 
 const parse = require('./parser');
 const createBundle = require('./template');
@@ -30,15 +31,28 @@ const createBundle = require('./template');
  *
  * @param  {Object} config - The configuration object exported from slimpack.config.js
  * @param  {string} config.entry - The path of the entry file for the dependency graph
- * @param  {output} config.output - The path where the bundle should be written when
+ * @param  {object} config.output - The path where the bundle should be written when
  * compilation finishes
- * @param  {output} [config.modules] - The modules object specifying loaders and file types
+ * @param  {object} [config.modules] - The modules object specifying loaders and file types
+ * @param  {array} [config.plugins] - A list of plugin classes to be used during the build
+ * process
  * @return {undefined} - The output of fs.writeFileSync is undefined
  */
-function compiler({ entry, output, modules }) {
+function compiler({ entry, output, modules, plugins }) {
+  compiler.events = new EventEmitter();
+  compiler.plugin = (eventName, pluginFunction) => {
+    compiler.events.on(eventName, () => pluginFunction(compiler, () => {}));
+  };
+
+  if (plugins) {
+    plugins.forEach((plugin) => {
+      plugin.apply(compiler);
+    });
+  }
+
   const entryFile = fs.readFileSync(entry, 'utf-8');
   const dependencyGraph = parse(entry, modules, entryFile);
-  const compilation = createBundle(`./${path.basename(entry)}`, dependencyGraph);
+  const compilation = createBundle(compiler, `./${path.basename(entry)}`, dependencyGraph);
 
   return fs.writeFileSync(`${output.path}/${output.filename}`, compilation);
 }
